@@ -1,0 +1,13 @@
+services:
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+      - "50000-50050:50000-50050/udp"
+    volumes:
+      - ./livekit.yaml:/livekit.yaml
+    env_file: .env
+    command: --config /livekit.yaml --bind 0.0.0.0 --node-ip ${LIVEKIT_NODE_IP:-127.0.0.1}
+    restart: unless-stopped
