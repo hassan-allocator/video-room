@@ -13,7 +13,8 @@
     "build": "vite build",
     "start": "NODE_ENV=production node server/index.js",
     "livekit:up": "docker compose up -d",
-    "livekit:down": "docker compose down"
+    "livekit:down": "docker compose down",
+    "deploy:render": "node scripts/deploy-render.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",

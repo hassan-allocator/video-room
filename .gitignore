@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .env
+.render-api-key
 certs/
 *.log
 .DS_Store

@@ -51,7 +51,35 @@ Other machines on your Wi‑Fi can join using your host's LAN IP (e.g. `http://1
 
 Browsers block camera/mic on plain `http://` LAN addresses — HTTPS is required. Dev certs are auto-generated in `certs/` on `npm run dev`.
 
-## Production
+## Deploy on Render
+
+**Live URL:** https://video-room-ze7p.onrender.com
+
+The web app is deployed on Render. **Render cannot host the LiveKit media server** (WebRTC requires UDP, which Render blocks). You need a separate LiveKit instance for video/audio to work.
+
+### Option A: LiveKit Cloud (easiest for Render)
+
+1. Create a free project at [cloud.livekit.io](https://cloud.livekit.io)
+2. Copy your **WebSocket URL**, **API Key**, and **API Secret**
+3. In the [Render dashboard](https://dashboard.render.com) → **video-room** → **Environment**, set:
+   - `LIVEKIT_URL` = `wss://your-project.livekit.cloud`
+   - `LIVEKIT_API_KEY` = your API key
+   - `LIVEKIT_API_SECRET` = your API secret
+4. Save — Render will redeploy automatically
+
+### Option B: Self-hosted LiveKit (VPS / Fly.io)
+
+Run LiveKit on a provider that supports UDP (DigitalOcean, Fly.io, Hetzner, etc.) and point the same env vars at your server (`wss://your-server:7880` or your TLS endpoint).
+
+### Redeploy
+
+```bash
+npm run deploy:render
+```
+
+Repo: https://github.com/hassan-allocator/video-room
+
+## Production (self-hosted)
 
 ```bash
 npm run build
