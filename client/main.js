@@ -58,7 +58,41 @@ function avatarColor(name) {
 // --- Screens ---
 
 function renderLanding() {
-  window.location.replace(roomUrl(ROOM_KEY));
+  app.innerHTML = `
+    <div class="screen">
+      <div class="card">
+        <div class="icon">📹</div>
+        <h1>Join a call</h1>
+        <p>Enter your invite code to continue.</p>
+        <form id="access-form">
+          <input
+            type="password"
+            id="room-key-input"
+            placeholder="Invite code"
+            required
+            autofocus
+            autocomplete="off"
+          />
+          <button class="btn-primary" type="submit">Continue</button>
+        </form>
+        <p class="error" id="error" hidden></p>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("access-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const key = document.getElementById("room-key-input").value.trim();
+    const errEl = document.getElementById("error");
+
+    if (key === ROOM_KEY) {
+      window.location.href = roomUrl(ROOM_KEY);
+      return;
+    }
+
+    errEl.textContent = "Invalid invite code";
+    errEl.hidden = false;
+  });
 }
 
 function renderJoin(roomId) {
@@ -438,7 +472,7 @@ if (roomId === ROOM_KEY) {
         <div class="icon">🚫</div>
         <h1>Room not found</h1>
         <p>This link is not valid.</p>
-        <a class="btn-primary" href="${roomUrl(ROOM_KEY)}">Go to the call</a>
+        <a class="btn-primary" href="/">Back to home</a>
       </div>
     </div>
   `;
