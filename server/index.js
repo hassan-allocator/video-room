@@ -1,6 +1,7 @@
 import express from "express";
 import { randomBytes } from "crypto";
 import { AccessToken } from "livekit-server-sdk";
+import { generateRoomName } from "./room-names.js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
@@ -37,8 +38,7 @@ if (isProd) {
 }
 
 app.post("/api/rooms", (_req, res) => {
-  const token = randomBytes(32).toString("hex");
-  res.json({ room: token });
+  res.json({ room: generateRoomName() });
 });
 
 app.get("/api/token", async (req, res) => {

@@ -9,7 +9,16 @@ import "./style.css";
 const app = document.getElementById("app");
 
 function getRoomFromUrl() {
-  return new URLSearchParams(window.location.search).get("room");
+  const fromQuery = new URLSearchParams(window.location.search).get("room");
+  if (fromQuery) return fromQuery;
+
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, "");
+  if (!path || path === "index.html") return null;
+  return decodeURIComponent(path);
+}
+
+function roomUrl(roomId) {
+  return `${window.location.origin}/${encodeURIComponent(roomId)}`;
 }
 
 function initials(name) {
@@ -70,7 +79,7 @@ function renderLanding() {
       const res = await fetch("/api/rooms", { method: "POST" });
       if (!res.ok) throw new Error("Failed to create room");
       const { room } = await res.json();
-      window.location.href = `/?room=${room}`;
+      window.location.href = roomUrl(room);
     } catch (e) {
       errEl.textContent =
         e.message === "Failed to fetch"
@@ -302,7 +311,7 @@ async function enterRoom(roomId, creds) {
   `;
 
   document.getElementById("copy-link").addEventListener("click", () => {
-    const url = `${window.location.origin}/?room=${roomId}`;
+    const url = roomUrl(roomId);
     navigator.clipboard.writeText(url).then(() => {
       const btn = document.getElementById("copy-link");
       btn.textContent = "Copied!";

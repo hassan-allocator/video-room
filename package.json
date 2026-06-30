@@ -14,7 +14,8 @@
     "start": "NODE_ENV=production node server/index.js",
     "livekit:up": "docker compose up -d",
     "livekit:down": "docker compose down",
-    "deploy:render": "node scripts/deploy-render.mjs"
+    "deploy:render": "node scripts/deploy-render.mjs",
+    "configure:livekit": "node scripts/configure-livekit-render.mjs"
   },
   "dependencies": {
     "express": "^4.21.2",
