@@ -1,12 +1,12 @@
 import express from "express";
 import { randomBytes } from "crypto";
 import { AccessToken } from "livekit-server-sdk";
-import { generateRoomName } from "./room-names.js";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const isProd = process.env.NODE_ENV === "production";
+const ROOM_KEY = "view-ijaz-from-everywhere";
 
 const API_KEY = process.env.LIVEKIT_API_KEY || "devkey";
 const API_SECRET = process.env.LIVEKIT_API_SECRET || "secret";
@@ -37,15 +37,15 @@ if (isProd) {
   app.use(express.static(join(__dirname, "../dist")));
 }
 
-app.post("/api/rooms", (_req, res) => {
-  res.json({ room: generateRoomName() });
-});
-
 app.get("/api/token", async (req, res) => {
   const { room, name, host, secure } = req.query;
 
   if (!room || !name) {
     return res.status(400).json({ error: "room and name are required" });
+  }
+
+  if (String(room) !== ROOM_KEY) {
+    return res.status(404).json({ error: "Room not found" });
   }
 
   const displayName = String(name).trim().slice(0, 50);

@@ -4,9 +4,11 @@ import {
   Track,
   ConnectionState,
 } from "livekit-client";
+import { mountDeviceSettings } from "./device-settings.js";
 import "./style.css";
 
 const app = document.getElementById("app");
+const ROOM_KEY = "view-ijaz-from-everywhere";
 
 function getRoomFromUrl() {
   const fromQuery = new URLSearchParams(window.location.search).get("room");
@@ -56,40 +58,7 @@ function avatarColor(name) {
 // --- Screens ---
 
 function renderLanding() {
-  app.innerHTML = `
-    <div class="screen">
-      <div class="card">
-        <div class="icon">📹</div>
-        <h1>Start a call</h1>
-        <p>Create a private room and share the link with your group. No accounts needed.</p>
-        <button class="btn-primary" id="create-room">Create room</button>
-        <p class="error" id="error" hidden></p>
-      </div>
-    </div>
-  `;
-
-  document.getElementById("create-room").addEventListener("click", async () => {
-    const btn = document.getElementById("create-room");
-    const errEl = document.getElementById("error");
-    btn.disabled = true;
-    btn.textContent = "Creating…";
-    errEl.hidden = true;
-
-    try {
-      const res = await fetch("/api/rooms", { method: "POST" });
-      if (!res.ok) throw new Error("Failed to create room");
-      const { room } = await res.json();
-      window.location.href = roomUrl(room);
-    } catch (e) {
-      errEl.textContent =
-        e.message === "Failed to fetch"
-          ? "Could not reach the server — make sure it is running (npm run dev)"
-          : e.message;
-      errEl.hidden = false;
-      btn.disabled = false;
-      btn.textContent = "Create room";
-    }
-  });
+  window.location.replace(roomUrl(ROOM_KEY));
 }
 
 function renderJoin(roomId) {
@@ -143,6 +112,7 @@ function renderJoin(roomId) {
 const tiles = new Map();
 let room = null;
 let localName = "";
+let deviceSettings = null;
 
 function createTile(participantId, name) {
   const tile = document.createElement("div");
@@ -305,7 +275,43 @@ async function enterRoom(roomId, creds) {
       <div class="controls">
         <button class="control-btn" id="toggle-mic" title="Toggle microphone">🎤</button>
         <button class="control-btn" id="toggle-cam" title="Toggle camera">📷</button>
+        <button class="control-btn" id="device-settings-btn" title="Camera &amp; mic settings">⚙️</button>
         <button class="control-btn leave" id="leave">Leave</button>
+      </div>
+      <div class="device-settings" id="device-settings" hidden>
+        <div class="device-settings-backdrop"></div>
+        <div class="device-settings-panel">
+          <div class="device-settings-header">
+            <h3>Device settings</h3>
+            <button type="button" class="device-settings-close" aria-label="Close">✕</button>
+          </div>
+          <div class="device-settings-body">
+            <div class="device-field">
+              <label for="camera-select">Camera</label>
+              <select id="camera-select"></select>
+            </div>
+            <div class="device-field" id="facing-row" hidden>
+              <span class="device-field-label">Facing</span>
+              <div class="device-facing-btns">
+                <button type="button" id="facing-front">Front</button>
+                <button type="button" id="facing-back">Back</button>
+              </div>
+            </div>
+            <div class="device-field">
+              <label for="mic-select">Microphone</label>
+              <select id="mic-select"></select>
+            </div>
+            <div class="device-field" id="speaker-row" hidden>
+              <label for="speaker-select">Speaker</label>
+              <select id="speaker-select"></select>
+            </div>
+            <section id="camera-controls">
+              <h4>Camera controls</h4>
+              <p class="device-settings-hint" id="camera-controls-hint"></p>
+              <div id="camera-controls-list"></div>
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -336,11 +342,13 @@ async function enterRoom(roomId, creds) {
   room.on(RoomEvent.LocalTrackPublished, (pub) => {
     if (pub.track) attachTrack("local", pub.track);
     syncControlButtons();
+    deviceSettings?.refresh();
   });
 
   room.on(RoomEvent.LocalTrackUnpublished, (pub) => {
     if (pub.track) detachTrack("local", pub.track);
     syncControlButtons();
+    deviceSettings?.refresh();
   });
 
   room.on(RoomEvent.Disconnected, () => {
@@ -363,6 +371,10 @@ async function enterRoom(roomId, creds) {
   document.getElementById("toggle-mic").addEventListener("click", toggleMic);
   document.getElementById("toggle-cam").addEventListener("click", toggleCam);
   document.getElementById("leave").addEventListener("click", leaveRoom);
+
+  deviceSettings = mountDeviceSettings(room, {
+    onError: (e) => alert(e?.message || "Could not change device settings"),
+  });
 
   syncControlButtons();
 }
@@ -405,6 +417,8 @@ async function toggleCam() {
 }
 
 async function leaveRoom() {
+  deviceSettings?.destroy();
+  deviceSettings = null;
   if (room) {
     await room.disconnect();
     room = null;
@@ -415,8 +429,19 @@ async function leaveRoom() {
 // --- Boot ---
 
 const roomId = getRoomFromUrl();
-if (roomId) {
+if (roomId === ROOM_KEY) {
   renderJoin(roomId);
+} else if (roomId) {
+  app.innerHTML = `
+    <div class="screen">
+      <div class="card">
+        <div class="icon">🚫</div>
+        <h1>Room not found</h1>
+        <p>This link is not valid.</p>
+        <a class="btn-primary" href="${roomUrl(ROOM_KEY)}">Go to the call</a>
+      </div>
+    </div>
+  `;
 } else {
   renderLanding();
 }
